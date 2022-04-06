@@ -1,0 +1,44 @@
+import torch
+import torch.nn as nn
+
+class CNN_FC(nn.module):
+    def get_rnn_fea()
+        
+        
+        # this method codes DBN and returns a DBN network
+            #
+    def get_cnn_network():
+    
+    def _init_(self): 
+        # this method defines the CNN+fully connected layer network
+        rg_hid = 128
+        clip_hid = 256
+        rna_hid = 64
+        cnn_hid = 64
+        motif_hid = 64
+        seq_hid = 102
+        
+        super(CNN_FC, self)._init_()
+        
+        self.rg_net = get_rnn_fea()
+        self.clip_net = get_rnn_fea()
+        self.rna_net = get_rnn_fea()
+        self.motif = get_rnn_fea()
+        self.seq_net = get_cnn_network()
+        
+        total_hid=rg_hid + clip_hid + rna_hid + motif_hid + seq_hid
+        
+        self.dense_net=nn.sequential(nn.Dropout(0.5), nn.Linear(?,?), nn.Softmax(dim = 0))
+        
+    def forward(self, training_data):
+        #   -training_data: a dictionary containing 5 files: "X_RG" for region type, "X_CLIP" for clip cobinding data, "X_RNA" for RNA structure data, "motif" for motif data, and "seq" for sequence data
+        
+        rg_net=self.rg_net(training_data["X_RG"])
+        clipt_net=self.clip_net(training_data["X_CLIP"])
+        rna_net=self.rna_net(training_data["X_RNA"])
+        motif_net=self.motif_net(training_data["motif"])
+        seq_net=self.seq_net(training_data["seq"])
+        
+        net = torch.cat((rg_net, clip_net, rna_net, motif_net, seq_net),?)
+        net = self.dense_net(net)
+        return(net)

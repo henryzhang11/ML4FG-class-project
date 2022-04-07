@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import os
 import numpy as np
@@ -20,7 +21,7 @@ class ProteinData(Dataset):
         self.filepath = filepath
         self.data = self.read_seq(filepath)
         self.protein = protein
-   def read_seq(self, seq_file):
+    def read_seq(self, seq_file):
         '''
         THIS WAS TAKEN FROM THE iDEEP DATA LOADER SINCE
         Using their code here will ensure we are loading the data exactly as
@@ -28,18 +29,18 @@ class ProteinData(Dataset):
         '''
         seq_list = []
         seq = ''
-        with gzip.open(seq_file, 'r') as fp:
+        with gzip.open(seq_file, 'rt') as fp:
             for line in fp:
                 if line[0] == '>':
                     name = line[1:-1]
                     if len(seq):
-                        seq_array = get_RNA_seq_concolutional_array(seq)
+                        seq_array = self.get_RNA_seq_concolutional_array(seq)
                         seq_list.append(seq_array)                    
                     seq = ''
                 else:
                     seq = seq + line[:-1]
             if len(seq):
-                seq_array = get_RNA_seq_concolutional_array(seq)
+                seq_array = self.get_RNA_seq_concolutional_array(seq)
                 seq_list.append(seq_array) 
         
         return np.array(seq_list)
@@ -113,9 +114,13 @@ def createDataset(path,training=True):
     proteinDatasets = [] #a list to hold all protein datasets
     for protein in os.listdir():
         #First, we want to create the full path to the sequence file
-        seqFile = os.path.join(path,trainOrTest,seq)
+        seqFile = os.path.join(path,protein,'5000',trainOrTest,seq)
         #Now we can load it into our dataset class
         proteinDatasets.append(ProteinData(seqFile,protein))
     #We can now create our contatDateset and return it
     return ConcatDataset(proteinDatasets)
 
+if __name__ == "__main__":
+    #then we want to run our createDataset Class
+    path = "/root/ML4FG/ML4FG-class-project/dataset/clip/"
+    dataset = createDataset(path)

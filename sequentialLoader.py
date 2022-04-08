@@ -3,6 +3,7 @@ from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import os
 import numpy as np
 import gzip
+import torch
 
 
 
@@ -18,9 +19,12 @@ class SequenceData(Dataset):
             - protein: the name of the protein this sequence is associated with
                         -essentially the label of the data
         '''
-        self.filepath = filepath
-        self.data = self.read_seq(filepath)
+
+        self.seq = 'sequences.fa.gz'
+        self.filepath = os.path.join(filepath,self.seq)
+        self.data = self.read_seq(self.filepath)
         self.protein = protein
+        print("Data Shape",self.data.shape)
     def read_seq(self, seq_file):
         '''
         THIS WAS TAKEN FROM THE iDEEP DATA LOADER SINCE
@@ -43,7 +47,7 @@ class SequenceData(Dataset):
                 seq_array = self.get_RNA_seq_concolutional_array(seq)
                 seq_list.append(seq_array) 
         
-        return np.array(seq_list)
+        return torch.from_numpy(np.array(seq_list))
     def get_RNA_seq_concolutional_array(self,seq,motif_len=4):
         '''
         THIS WAS TAKEN FROM THE iDEEP DATA LOADER SINCE
@@ -109,14 +113,14 @@ def createDataset(path,training=True):
     else:
         #Then we need to load the test dataset
         trainOrTest = 'test_sample_0'
-    seq = 'sequences.fa.gz'
     os.chdir(path)#we want to change directory to path
     sequenceDatasets = [] #a list to hold all protein datasets
     for protein in os.listdir():
+        print("Reading: {}".format(protein))
         #First, we want to create the full path to the sequence file
-        seqFile = os.path.join(path,protein,'5000',trainOrTest,seq)
+        seqFile = os.path.join(path,protein,'5000',trainOrTest)
         #Now we can load it into our dataset class
-        sequenceDatasets.append(sequenceData(seqFile,protein))
+        sequenceDatasets.append(SequenceData(seqFile,protein))
     #We can now create our contatDateset and return it
     return ConcatDataset(sequenceDatasets)
 
@@ -124,3 +128,4 @@ if __name__ == "__main__":
     #then we want to run our createDataset Class
     path = "/root/ML4FG/ML4FG-class-project/dataset/clip/"
     dataset = createDataset(path)
+    print(len(dataset))

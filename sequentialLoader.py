@@ -6,7 +6,7 @@ import gzip
 
 
 
-class ProteinData(Dataset):
+class SequenceData(Dataset):
     '''
     The dataloader to load in the sequential data of a specific protein
     '''
@@ -111,14 +111,14 @@ def createDataset(path,training=True):
         trainOrTest = 'test_sample_0'
     seq = 'sequences.fa.gz'
     os.chdir(path)#we want to change directory to path
-    proteinDatasets = [] #a list to hold all protein datasets
+    sequenceDatasets = [] #a list to hold all protein datasets
     for protein in os.listdir():
         #First, we want to create the full path to the sequence file
         seqFile = os.path.join(path,protein,'5000',trainOrTest,seq)
         #Now we can load it into our dataset class
-        proteinDatasets.append(ProteinData(seqFile,protein))
+        sequenceDatasets.append(sequenceData(seqFile,protein))
     #We can now create our contatDateset and return it
-    return ConcatDataset(proteinDatasets)
+    return ConcatDataset(sequenceDatasets)
 
 if __name__ == "__main__":
     #then we want to run our createDataset Class

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import os
 import numpy as np
 import gzip
@@ -12,7 +13,7 @@ class RGDataset(Dataset):
     the dataset for the RG data which takes a specific protein and loads
     in the data
     '''
-    def __init__(self,filepath,protein):
+    def __init__(self,filepath,protein,scaler=None):
         '''
         Initialize the data set
         Inputs:
@@ -23,10 +24,16 @@ class RGDataset(Dataset):
         self.filepath = filepath
         self.filename = "matrix_RegionType.tab.gz"
         self.data = np.loadtxt(gzip.open(os.path.join(self.filepath,self.filename)),skiprows=1)
+        self.data,self.scaler = self.preprocess_data(self.data,scaler=scaler)
         #convert the np array to tensor
         self.data = torch.from_numpy(self.data)
         self.protein = protein
         print("Data Shape",self.data.shape)
+    def getScaler(self):
+        '''
+        Returns the scaler
+        '''
+        return self.scaler
     def __getitem__(self,i):
         '''
         method will get the item at index i
@@ -37,6 +44,19 @@ class RGDataset(Dataset):
         Will get the length of the dataset
         '''
         return len(self.data)
+    def preprocess_data(self,X, scaler=None, stand = False):
+        '''
+        THIS WAS TAKEN FROM THER iDEEP PROJECT
+        method will scale the data
+        '''
+        if not scaler:
+            if stand:
+                scaler = StandardScaler()
+            else:
+                scaler = MinMaxScaler()
+            scaler.fit(X)
+        X = scaler.transform(X)
+        return X, scaler    
 
 def createDataset(path,training=True):
     '''

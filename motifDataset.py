@@ -8,9 +8,9 @@ import torch
 
 
 
-class ClipDataset(Dataset):
+class MotifDataset(Dataset):
     '''
-    The dataset for the Clip data which takes a specific protein and loads
+    The dataset for the Motif data which takes a specific protein and loads
     in the data
     '''
     def __init__(self,filepath,protein,scaler=None):
@@ -23,8 +23,8 @@ class ClipDataset(Dataset):
             - scaler variable used
         '''
         self.filepath = filepath
-        self.filename =  "matrix_Cobinding.tab.gz"
-        self.data = np.loadtxt(gzip.open(os.path.join(self.filepath,self.filename)),skiprows=1)
+        self.filename =  'motif_fea.gz'
+        self.data = np.loadtxt(gzip.open(os.path.join(self.filepath,self.filename)),skiprows=1,usecols=range(1,103))
         self.data,self.scaler= self.preprocess_data(self.data,scaler=scaler)
         #convert the np array to tensor
         self.data = torch.from_numpy(self.data)
@@ -84,7 +84,7 @@ def createDataset(path,training=True):
         #First, we want to create the full path to the sequence file
         dataFile = os.path.join(path,protein,'5000',trainOrTest)
         #Now we can load it into our dataset class
-        Datasets.append(ClipDataset(dataFile,protein))
+        Datasets.append(MotifDataset(dataFile,protein))
     #We can now create our contatDateset and return it
     return ConcatDataset(Datasets)
 

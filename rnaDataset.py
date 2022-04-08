@@ -8,22 +8,22 @@ import torch
 
 
 
-class ClipDataset(Dataset):
+class RNADataset(Dataset):
     '''
-    The dataset for the Clip data which takes a specific protein and loads
+    The dataset for the RNA data which takes a specific protein and loads
     in the data
     '''
     def __init__(self,filepath,protein,scaler=None):
         '''
         Initialize the data set
         Inputs:
-            - filepath: path to the sequence file for the particular protein
+            - filepath: path to the RNA file for the particular protein
             - protein: the name of the protein this file is associated with
                 - essentially the label of the data
             - scaler variable used
         '''
         self.filepath = filepath
-        self.filename =  "matrix_Cobinding.tab.gz"
+        self.filename =  "matrix_RNAfold.tab.gz"
         self.data = np.loadtxt(gzip.open(os.path.join(self.filepath,self.filename)),skiprows=1)
         self.data,self.scaler= self.preprocess_data(self.data,scaler=scaler)
         #convert the np array to tensor
@@ -84,7 +84,7 @@ def createDataset(path,training=True):
         #First, we want to create the full path to the sequence file
         dataFile = os.path.join(path,protein,'5000',trainOrTest)
         #Now we can load it into our dataset class
-        Datasets.append(ClipDataset(dataFile,protein))
+        Datasets.append(RNADataset(dataFile,protein))
     #We can now create our contatDateset and return it
     return ConcatDataset(Datasets)
 

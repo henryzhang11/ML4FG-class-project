@@ -29,7 +29,6 @@ class MotifDataset(Dataset):
         #convert the np array to tensor
         self.data = torch.from_numpy(self.data)
         self.protein = protein
-        print("Data Shape",self.data.shape)
     def getScaler(self):
         '''
         Get the scaler

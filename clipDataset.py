@@ -22,14 +22,14 @@ class ClipDataset(Dataset):
                 - essentially the label of the data
             - scaler variable used
         '''
+        self.scaler = None
         self.filepath = filepath
         self.filename =  "matrix_Cobinding.tab.gz"
         self.data = np.loadtxt(gzip.open(os.path.join(self.filepath,self.filename)),skiprows=1)
-        self.data,self.scaler= self.preprocess_data(self.data,scaler=scaler)
+        #self.data,self.scaler= self.preprocess_data(self.data,scaler=scaler)
         #convert the np array to tensor
         self.data = torch.from_numpy(self.data)
         self.protein = protein
-        print("Data Shape",self.data.shape)
     def getScaler(self):
         '''
         Get the scaler

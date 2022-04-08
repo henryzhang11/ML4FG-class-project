@@ -24,7 +24,6 @@ class SequenceData(Dataset):
         self.filepath = os.path.join(filepath,self.seq)
         self.data = self.read_seq(self.filepath)
         self.protein = protein
-        print("Data Shape",self.data.shape)
     def read_seq(self, seq_file):
         '''
         THIS WAS TAKEN FROM THE iDEEP DATA LOADER SINCE

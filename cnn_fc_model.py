@@ -7,12 +7,12 @@ class CNN_FC(nn.Module):
         # -input_dim: length of input layer
         # -num_hidden: length of hidden layers
         model = nn.Sequential(nn.Linear(input_dim, num_hidden), 
-                                    nn.ReLu(), 
+                                    nn.ReLU(), 
                                     nn.PReLU(), 
                                     nn.BatchNorm1d(num_hidden),
                                     nn.Dropout(0.5),
                                     nn.Linear(num_hidden, num_hidden),
-                                    nn.ReLu(),
+                                    nn.ReLU(),
                                     nn.PReLU(),
                                     nn.BatchNorm1d(num_hidden),
                                     nn.Dropout(0.5))
@@ -21,13 +21,13 @@ class CNN_FC(nn.Module):
     def get_cnn_network(self):
     # this method codes the cnn network for one-hot encoded RNA sequences
         nbfilter = 101 # the default cnn input length for our case since we have 101 nucleotides windows
-        model = nn.Sequential(nn.Conv1d(input_dim = 4, output_dim = 4, filter_widths = 7, padding = 3),
-                                    nn.ReLu(),
+        model = nn.Sequential(nn.Conv1d(4,4,kernel_size = 7, padding = 3),
+                                    nn.ReLU(),
                                     nn.MaxPool1d(3),
                                     nn.Dropout(0.5),
                                     nn.Flatten(),
                                     nn.Linear(nbfilter, nbfilter),
-                                    nn.ReLu(),
+                                    nn.ReLU(),
                                     nn.Dropout(0.25))
         return model
         # not the same as original code, original code nbfilter = 102
@@ -51,7 +51,7 @@ class CNN_FC(nn.Module):
         seq_hid = 101 # dim[1] of Sequences.fa (here it disagrees with the 
         #not the same as original code, original code seq_hid=102
         
-        super(CNN_FC, self)._init_()
+        super(CNN_FC, self).__init__()
         
         self.rg_net = self.get_rnn_fea(rg_dim, rg_hid*2)
         self.clip_net = self.get_rnn_fea(clip_dim, clip_hid*3)

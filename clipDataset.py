@@ -54,7 +54,7 @@ class ClipDataset(Dataset):
         '''
         method will get the item at index i
         '''
-        return self.data[i],self.protein
+        return self.data[i]
     def __len__(self):
         '''
         Will get the length of the dataset

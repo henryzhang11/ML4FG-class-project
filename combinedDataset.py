@@ -10,6 +10,7 @@ from clipDataset import ClipDataset
 from motifDataset import MotifDataset
 from rnaDataset import RNADataset
 from rgDataset import RGDataset
+from sequentialLoader import SequenceData
 
 
 
@@ -83,6 +84,7 @@ class CombinedDataset(Dataset):
         self.motif = MotifDataset(dataFolder,protein,self.scalers['Motif'])
         self.RNA = RNADataset(dataFolder,protein,self.scalers['RNA'])
         self.RG = RGDataset(dataFolder,protein,self.scalers['RG'])
+        self.seq = SequenceData(dataFolder,protein)
 
         self.scalers['Clip'] = self.clip.getScaler()
         self.scalers['Motif'] = self.motif.getScaler()
@@ -108,10 +110,11 @@ class CombinedDataset(Dataset):
         '''
         #Retrieve all of the data points and store them in a dict
         data = dict()
-        data['X_RG'] = self.RG[i]
-        data['X_Clip'] = self.clip[i]
-        data['X_RNA'] = self.RNA[i]
-        data['Motif'] = self.motif[i]
+        data['X_RG'] = self.RG[i].float()
+        data['X_CLIP'] = self.clip[i].float()
+        data['X_RNA'] = self.RNA[i].float()
+        data['motif'] = self.motif[i].float()
+        data['seq'] = self.seq[i].float()
         return data,self.getProtein()
 
 def createDataset(path,training=True):

@@ -1,13 +1,22 @@
-def train_model(model, train_data, validation_data, epochs=100, patience=10, verbose = True):
+import os
+from combinedDataset import CombinedDataset
+import torch
+from cnn_fc_model import CNN_FC
+from cnn_lstm_model import CNN_LSTM
+
+def train_model(model, dataset, epochs=100, patience=10, verbose = True):
     
     # Train a 1D CNN model and record accuracy metrics.
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    train_dataset = load_all_files(data_dir)
+    trainLen = int(0.8 * len(dataset))
+    validationLen = len(dataset) - trainLen
+    #we do our randomsampling
+    train_dataset,validation_dataset = torch.utils.data.random_split(dataset,(trainLen,validationLen))
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=100, num_workers = 0)
-    validation_dataset = load_all_files(data_dir)
+
     validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=100)
 
     # 2. Instantiates an optimizer for the model. 
@@ -78,3 +87,15 @@ def train_model(model, train_data, validation_data, epochs=100, patience=10, ver
 
     # 4. Return the fitted model (not strictly necessary since this happens "in place"), train and validation accuracies.
     return model, train_accs, val_accs # TODO CODE (make sure you use train_accs, val_accs in former parts of this code)
+
+
+if __name__ == '__main__':
+    dataDir = '' #full path to the directory holding all of the data 
+    #call the combined dataset class
+    trainingData = CombinedDataset(dataDir,training=True)#we want to load the training set
+    for p,protein in enumerate(os.listdir(dataDir)):
+        print("Training:{}".format(protein))
+        trainingData.loadData(p)#will load in the data for protein located at index p in the directory
+        cnnfc = CNN_FC()
+        train_model(cnnfc, dataset, epochs=100, patience=10, verbose = True)
+    

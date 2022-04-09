@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 from combinedDataset import CombinedDataset
 import torch
@@ -26,34 +27,33 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
 
     # 3. Run the training loop with early stopping. 
     # TODO CODE
-    import torch.nn.functional as F
 
-    def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda"):
+def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda"):
 
-        torch.set_grad_enabled(train_flag)
-        model.train() if train_flag else model.eval() 
+    torch.set_grad_enabled(train_flag)
+    model.train() if train_flag else model.eval() 
 
-        losses = []
-        accuracies = []
+    losses = []
+    accuracies = []
 
-        for (x,y) in dataloader: # collection of tuples with iterator
+    for (x,y) in dataloader: # collection of tuples with iterator
 
-            (x, y) = ( x.to(device), y.to(device) ) # transfer data to GPU
+        (x, y) = ( x.to(device), y.to(device) ) # transfer data to GPU
 
-            output = model(x) # forward pass
-            output = output.squeeze() # remove spurious channel dimension
-            loss = F.binary_cross_entropy_with_logits( output, y ) # numerically stable
+        output = model(x) # forward pass
+        output = output.squeeze() # remove spurious channel dimension
+        loss = F.binary_cross_entropy_with_logits( output, y ) # numerically stable
 
-            if train_flag: 
-                loss.backward() # back propagation
-                optimizer.step()
-                optimizer.zero_grad()
+        if train_flag: 
+            loss.backward() # back propagation
+            optimizer.step()
+            optimizer.zero_grad()
 
-            losses.append(loss.detach().cpu().numpy())
-            accuracy = torch.mean( ( (output > .5) == (y > .5) ).float() )
-            accuracies.append(accuracy.detach().cpu().numpy())  
-    
-        return( np.mean(losses), np.mean(accuracies) )
+        losses.append(loss.detach().cpu().numpy())
+        accuracy = torch.mean( ( (output > .5) == (y > .5) ).float() )
+        accuracies.append(accuracy.detach().cpu().numpy())  
+
+    return( np.mean(losses), np.mean(accuracies) )
 
     train_accs = []
     val_accs = []
@@ -90,12 +90,13 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
 
 
 if __name__ == '__main__':
-    dataDir = '' #full path to the directory holding all of the data 
+    dataDir = "/root/ML4FG/ML4FG-class-project/dataset/clip/"
+ #full path to the directory holding all of the data 
     #call the combined dataset class
     trainingData = CombinedDataset(dataDir,training=True)#we want to load the training set
     for p,protein in enumerate(os.listdir(dataDir)):
         print("Training:{}".format(protein))
         trainingData.loadData(p)#will load in the data for protein located at index p in the directory
         cnnfc = CNN_FC()
-        train_model(cnnfc, dataset, epochs=100, patience=10, verbose = True)
+        train_model(cnnfc, trainingData, epochs=100, patience=10, verbose = True)
     

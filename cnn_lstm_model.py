@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-class CNN_FC(nn.Module):
-    def get_rnn_fea(input_dim, num_hidden = 128)
+class CNN_LSTM(nn.Module):
+    def get_rnn_fea(input_dim, num_hidden = 128):
         model = nn.Sequential(nn.Linear(input_dim, num_hidden), 
                                     nn.ReLu(), 
                                     nn.PReLU(), 
@@ -48,7 +48,7 @@ class CNN_FC(nn.Module):
         seq_hid = 101 # dim[1] of Sequences.fa (here it disagrees with the 
         #not the same as original code, original code seq_hid=102
         
-        super(CNN_FC, self)._init_()
+        super(CNN_LSTM, self)._init_()
         
         self.rg_net = get_rnn_fea(rg_dim, rg_hid*2)
         self.clip_net = get_rnn_fea(clip_dim, clip_hid*3)

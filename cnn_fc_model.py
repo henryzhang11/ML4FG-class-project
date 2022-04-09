@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 
 class CNN_FC(nn.Module):
-    def get_rnn_fea(input_dim, num_hidden = 128)
-    # this method codes dense neural nets for datasets aside from sequence
-            # -input_dim: length of input layer
-            # -num_hidden: length of hidden layers
+    def get_rnn_fea(self,input_dim, num_hidden = 128):
+        # this method codes dense neural nets for datasets aside from sequence
+        # -input_dim: length of input layer
+        # -num_hidden: length of hidden layers
         model = nn.Sequential(nn.Linear(input_dim, num_hidden), 
                                     nn.ReLu(), 
                                     nn.PReLU(), 
@@ -18,7 +18,7 @@ class CNN_FC(nn.Module):
                                     nn.Dropout(0.5))
         return model
         
-    def get_cnn_network():
+    def get_cnn_network(self):
     # this method codes the cnn network for one-hot encoded RNA sequences
         nbfilter = 101 # the default cnn input length for our case since we have 101 nucleotides windows
         model = nn.Sequential(nn.Conv1d(input_dim = 4, output_dim = 4, filter_widths = 7, padding = 3),
@@ -32,7 +32,7 @@ class CNN_FC(nn.Module):
         return model
         # not the same as original code, original code nbfilter = 102
     
-    def _init_(self): 
+    def __init__(self): 
         # this method defines CNN layer, dense layer, and the fully connected layer that follows
         rg_dim = 505 # dim[1] of matrix_regionType.tab
         rg_hid = 128
@@ -53,11 +53,11 @@ class CNN_FC(nn.Module):
         
         super(CNN_FC, self)._init_()
         
-        self.rg_net = get_rnn_fea(rg_dim, rg_hid*2)
-        self.clip_net = get_rnn_fea(clip_dim, clip_hid*3)
-        self.rna_net = get_rnn_fea(rna_dim, rna_hid*2)
-        self.motif_net = get_rnn_fea(motif_dim, motif_hid*2)
-        self.seq_net = get_cnn_network()
+        self.rg_net = self.get_rnn_fea(rg_dim, rg_hid*2)
+        self.clip_net = self.get_rnn_fea(clip_dim, clip_hid*3)
+        self.rna_net = self.get_rnn_fea(rna_dim, rna_hid*2)
+        self.motif_net = self.get_rnn_fea(motif_dim, motif_hid*2)
+        self.seq_net = self.get_cnn_network()
         
         total_hid=rg_hid*2 + clip_hid*3 + rna_hid*2 + motif_hid*2 + seq_hid # total hid is length of shared representation as mentioned in picturial summary of iDeep
         # not the same as original code, original code doesn't have "*2"s

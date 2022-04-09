@@ -22,7 +22,7 @@ class SequenceData(Dataset):
 
         self.seq = 'sequences.fa.gz'
         self.filepath = os.path.join(filepath,self.seq)
-        self.data = self.read_seq(self.filepath)
+        self.data = self.read_seq(self.filepath) 
         self.protein = protein
     def read_seq(self, seq_file):
         '''
@@ -90,7 +90,7 @@ class SequenceData(Dataset):
         '''
         This method will return the datapoint at a specific index
         '''
-        return self.data[i],self.protein
+        return torch.swapaxes(self.data[i],-2,-1)
 
 
 

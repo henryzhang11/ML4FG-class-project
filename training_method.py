@@ -4,14 +4,15 @@ from combinedDataset import CombinedDataset
 import torch
 from cnn_fc_model import CNN_FC
 from cnn_lstm_model import CNN_LSTM
+import numpy as np
 
 def train_model(model, dataset, epochs=100, patience=10, verbose = True):
     
     # Train a 1D CNN model and record accuracy metrics.
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
+    #model.to(device)
+    #dataset.to(device)
     trainLen = int(0.8 * len(dataset))
     validationLen = len(dataset) - trainLen
     #we do our randomsampling
@@ -27,9 +28,40 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
 
     # 3. Run the training loop with early stopping. 
     # TODO CODE
+    train_accs = []
+    val_accs = []
+    patience = 10 # for early stopping
+    patience_counter = patience
+    best_val_loss = np.inf
+    check_point_filename = 'model_checkpoint.pt' # to save the best model fit to date
+    
+    import timeit
+    start_time = timeit.default_timer()
+    torch.set_grad_enabled(True) # we'll need gradients
+
+    for epoch in range(20):
+        start_time = timeit.default_timer()
+        train_loss, train_acc = run_one_epoch(True, train_dataloader, model, optimizer, device)
+        val_loss, val_acc = run_one_epoch(False, validation_dataloader, model, optimizer, device)
+        train_accs.append(train_acc)
+        val_accs.append(val_acc)
+        if val_loss < best_val_loss: 
+           torch.save(model.state_dict(), check_point_filename)
+           best_val_loss = val_loss
+           patience_counter = patience
+        else: 
+           patience_counter -= 1
+           if patience_counter <= 0: 
+                model.load_state_dict(torch.load(check_point_filename)) # recover the best model so far
+                break
+        elapsed = float(timeit.default_timer() - start_time)
+        print("Epoch %i took %.2fs. Train loss: %.4f acc: %.4f. Val loss: %.4f acc: %.4f. Patience left: %i" % 
+              (epoch+1, elapsed, train_loss, train_acc, val_loss, val_acc, patience_counter ))
+
+
+    
 
 def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda"):
-
     torch.set_grad_enabled(train_flag)
     model.train() if train_flag else model.eval() 
 
@@ -38,7 +70,7 @@ def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda"):
 
     for (x,y) in dataloader: # collection of tuples with iterator
 
-        (x, y) = ( x.to(device), y.to(device) ) # transfer data to GPU
+        #(x, y) = ( x.to(device), y.to(device) ) # transfer data to GPU
 
         output = model(x) # forward pass
         output = output.squeeze() # remove spurious channel dimension

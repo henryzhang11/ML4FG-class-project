@@ -5,6 +5,7 @@ import os
 import numpy as np
 import gzip
 import torch
+import re
 
 from clipDataset import ClipDataset
 from motifDataset import MotifDataset
@@ -43,7 +44,9 @@ class CombinedDataset(Dataset):
             self.scalers['Clip'] = None
             self.scalers['RNA'] = None
             self.scalers['Motif'] = None
-            
+        #Load the response matrix
+        matrixResp = "matrix_Response.tab.gz"
+         
     def getProtein(self):
         '''
         will return the current protein data being loaded
@@ -85,6 +88,7 @@ class CombinedDataset(Dataset):
         self.RNA = RNADataset(dataFolder,protein,self.scalers['RNA'])
         self.RG = RGDataset(dataFolder,protein,self.scalers['RG'])
         self.seq = SequenceData(dataFolder,protein)
+        self.Y = np.loadtxt(gzip.open(os.path.join(dataFolder,"matrix_Response.tab.gz")),skiprows=1)
 
         self.scalers['Clip'] = self.clip.getScaler()
         self.scalers['Motif'] = self.motif.getScaler()
@@ -115,7 +119,8 @@ class CombinedDataset(Dataset):
         data['X_RNA'] = self.RNA[i].float()
         data['motif'] = self.motif[i].float()
         data['seq'] = self.seq[i].float()
-        return data,self.getProtein()
+        proteinNum = int(self.getProtein())
+        return data,self.Y[i]
 
 def createDataset(path,training=True):
     '''

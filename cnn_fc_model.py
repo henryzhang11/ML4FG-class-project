@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class CNN_FC(nn.Module):
-    def get_rnn_fea(self,input_dim, num_hidden = 128):
+    def get_rnn_fea(self,input_dim, num_hidden = 128,sequenceLen=3030):
         # this method codes dense neural nets for datasets aside from sequence
         # -input_dim: length of input layer
         # -num_hidden: length of hidden layers
@@ -26,7 +27,7 @@ class CNN_FC(nn.Module):
                                     nn.MaxPool1d(3),
                                     nn.Dropout(0.5),
                                     nn.Flatten(),
-                                    nn.Linear(nbfilter, nbfilter),
+                                    nn.Linear(140, nbfilter),
                                     nn.ReLU(),
                                     nn.Dropout(0.25))
         return model
@@ -58,10 +59,10 @@ class CNN_FC(nn.Module):
         self.rna_net = self.get_rnn_fea(rna_dim, rna_hid*2)
         self.motif_net = self.get_rnn_fea(motif_dim, motif_hid*2)
         self.seq_net = self.get_cnn_network()
-        
+                
         total_hid=rg_hid*2 + clip_hid*3 + rna_hid*2 + motif_hid*2 + seq_hid # total hid is length of shared representation as mentioned in picturial summary of iDeep
         # not the same as original code, original code doesn't have "*2"s
-        self.dense_net=nn.Sequential(nn.Dropout(0.5), nn.Linear(total_hid, 2), nn.Softmax(dim = 0))
+        self.dense_net=nn.Sequential(nn.Dropout(0.5), nn.Linear(total_hid, 1), nn.Softmax(dim = 0))
         
     def forward(self, training_data):
     # this method defines the forward function used in training and testing
@@ -71,8 +72,9 @@ class CNN_FC(nn.Module):
         clip_net = self.clip_net(training_data["X_CLIP"])
         rna_net = self.rna_net(training_data["X_RNA"])
         motif_net = self.motif_net(training_data["motif"])
+        print("Reached seq")
         seq_net = self.seq_net(training_data["seq"])
-        
+        print("Reached Concatenate") 
         net = torch.cat((rg_net, clip_net, rna_net, motif_net, seq_net),1) # tensors of a batch are concatenated along axis 1 (the only non batch sequence dimension)
         net = self.dense_net(net)
         return(net)

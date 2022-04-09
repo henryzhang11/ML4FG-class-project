@@ -5,8 +5,14 @@ import torch
 from cnn_fc_model import CNN_FC
 from cnn_lstm_model import CNN_LSTM
 import numpy as np
+
+import torch.nn.functional as F
+from sklearn.preprocessing import OneHotEncoder
+import re
+
 import matplotlib.pyplot as plt # for plotting
 import seaborn as sns # also for plotting
+
 
 def train_model(model, dataset, epochs=100, patience=10, verbose = True):
     
@@ -15,12 +21,16 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #model.to(device)
     #dataset.to(device)
+    proteins = dataset.getProteinList()
+    onehot = OneHotEncoder(handle_unknown="ignore")
+    proteins = np.array(proteins).reshape(1,-1)
+    onehot.fit(proteins)
     trainLen = int(0.8 * len(dataset))
     validationLen = len(dataset) - trainLen
     #we do our randomsampling
     train_dataset,validation_dataset = torch.utils.data.random_split(dataset,(trainLen,validationLen))
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=100, num_workers = 0)
-
+    
     validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=100)
 
     # 2. Instantiates an optimizer for the model. 
@@ -53,6 +63,10 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
 
     for epoch in range(20):
         start_time = timeit.default_timer()
+
+        train_loss, train_acc = run_one_epoch(True, train_dataloader, model, optimizer, device,onehot=onehot)
+        val_loss, val_acc = run_one_epoch(False, validation_dataloader, model, optimizer, device,onehot=onehot)
+
         train_loss, train_acc, train_tp, train_tn, train_fp, train_fn = run_one_epoch(True, train_dataloader, model, optimizer, device)
         val_loss, val_acc, val_tp, val_tn, val_fp, val_fn = run_one_epoch(False, validation_dataloader, model, optimizer, device)
         
@@ -60,6 +74,7 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
         train_tns.append(train_tn)
         train_fps.append(train_fp)
         train_fns.append(train_fn)
+
         train_accs.append(train_acc)
         
         val_tps.append(val_tp)
@@ -84,7 +99,7 @@ def train_model(model, dataset, epochs=100, patience=10, verbose = True):
       return train_tps, train_tns, train_fps, train_fns, val_tps, val_tns, val_fps, val_fns  # TODO CODE (make sure you use train_accs, val_accs in former parts of this code)
     
 
-def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda"):
+def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda",onehot=None):
     torch.set_grad_enabled(train_flag)
     model.train() if train_flag else model.eval() 
 
@@ -101,7 +116,10 @@ def run_one_epoch(train_flag, dataloader, model, optimizer, device="cuda"):
 
         output = model(x) # forward pass
         output = output.squeeze() # remove spurious channel dimension
-        loss = F.binary_cross_entropy_with_logits( output, y ) # numerically stable
+        
+        y = torch.Tensor(list(y))
+        
+        loss = F.binary_cross_entropy_with_logits(output,y) # numerically stable
 
         if train_flag: 
             loss.backward() # back propagation

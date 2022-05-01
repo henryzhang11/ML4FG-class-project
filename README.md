@@ -8,6 +8,6 @@ Before runing any of the below models, you need to upload the folder "dataset", 
 
 "cnn_lstm.py" holds the model definition and forward method of the CNN-LSTM model, which is our first attempt of improvement. It also includes a training function with early stopping.
   
-"cnn_transformer.py" holds the model definition and forward method of the CNN-Transformer model, which is our first attempt of improvement. It also includes a training function with early stopping.
+"cnn_transformer.py" holds the model definition and forward method of the CNN-Transformer model, which is our second attempt of improvement. It also includes a training function with early stopping.
 
-"cnn_lstm_transformer.py" holds the model definition and forward method of the CNN-LSTM-Transformer model, which is our first attempt of improvement. It also includes a training function with early stopping.
+"cnn_lstm_transformer.py" holds the model definition and forward method of the CNN-LSTM-Transformer model, which is our final attempt of improvement. It also includes a training function with early stopping.

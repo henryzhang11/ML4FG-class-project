@@ -2,7 +2,7 @@
 
 This Github repository holds data and code of our ML4FG class project. 
 
-Before runing any of the below models, you need to run 
+Before runing any of the below models, you need to upload the folder "dataset", which contains all datas, to your machine, and run "combinedDataset" to load the data.
 
 "cnn_fc.py" holds the model definition and forward method of the CNN-fully connected layer model, which is the one iDeep uses. It also includes a training function with early stopping.
 

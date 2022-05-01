@@ -1,40 +1,45 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class CNN_LSTM(nn.Module):
-    def get_rnn_fea(input_dim, num_hidden = 128):
-        model = nn.Sequential(nn.Linear(input_dim, num_hidden), 
-                                    nn.ReLu(), 
-                                    nn.PReLU(), 
-                                    nn.BatchNorm1d(num_hidden),
-                                    nn.Dropout(0.5),
-                                    nn.Linear(num_hidden, num_hidden),
-                                    nn.ReLu(),
+    def get_rnn_fea(self,input_dim, num_hidden = 20,sequenceLen=3030):
+        # this method codes dense neural nets for datasets aside from sequence
+        # -input_dim: length of input layer
+        # -num_hidden: length of hidden layers
+        model = nn.Sequential(nn.Linear(input_dim, num_hidden),  
+                                    nn.ReLU(), 
                                     nn.PReLU(),
                                     nn.BatchNorm1d(num_hidden),
-                                    nn.Dropout(0.5))
+                                    nn.Dropout(0.2),
+                                    nn.Linear(num_hidden, num_hidden),
+                                    nn.ReLU(),
+                                    nn.PReLU(),
+                                    nn.BatchNorm1d(num_hidden),
+                                    nn.Dropout(0.1))
+        
         return model
-        # this method codes DBN and returns a DBN network
-            #
-    def get_cnn_network():
+        
+    def get_cnn_network(self):
+    # this method codes the cnn network for one-hot encoded RNA sequences
         nbfilter = 101 # the default cnn input length for our case since we have 101 nucleotides windows
-        model = nn.Sequential(nn.Conv1d(input_dim = 4, output_dim = 4, filter_widths = 7, padding = 3),
-                                    nn.ReLu(),
+        model = nn.Sequential(nn.Conv1d(4,4,kernel_size = 7, padding = 3),
+                                    nn.ReLU(),
                                     nn.MaxPool1d(3),
-                                    nn.Dropout(0.5),
+                                    nn.Dropout(0.2),
                                     nn.Flatten(),
-                                    nn.Linear(nbfilter, nbfilter),
-                                    nn.ReLu(),
-                                    nn.Dropout(0.25))
+                                    nn.Linear(140, nbfilter),
+                                    nn.ReLU(),
+                                    nn.Dropout(0.1))
         return model
         # not the same as original code, original code nbfilter = 102
     
-    def _init_(self): 
-        # this method defines the CNN+fully connected layer network
+    def __init__(self, number_of_clip_experiments): 
+        # this method defines CNN layer, dense layer, and the fully connected layer that follows
         rg_dim = 505 # dim[1] of matrix_regionType.tab
         rg_hid = 128
         
-        clip_dim = 3030 # dim[1] of matrix_Cobinding.tab
+        clip_dim = number_of_clip_experiments * 101 # dim[1] of matrix_Cobinding.tab
         clip_hid = 256
         
         rna_dim = 101 # dim[1] of matrix_RNAfold.tab
@@ -48,22 +53,24 @@ class CNN_LSTM(nn.Module):
         seq_hid = 101 # dim[1] of Sequences.fa (here it disagrees with the 
         #not the same as original code, original code seq_hid=102
         
-        super(CNN_LSTM, self)._init_()
+        super(CNN_LSTM, self).__init__()
         
-        self.rg_net = get_rnn_fea(rg_dim, rg_hid*2)
-        self.clip_net = get_rnn_fea(clip_dim, clip_hid*3)
-        self.rna_net = get_rnn_fea(rna_dim, rna_hid*2)
-        self.motif_net = get_rnn_fea(motif_dim, motif_hid*2)
-        self.seq_net = get_cnn_network()
-        
-        total_hid=rg_hid*2 + clip_hid*3 + rna_hid*2 + motif_hid*2 + seq_hid # total hid is length of shared representation as mentioned in picturial summary of iDeep
+        self.rg_net = self.get_rnn_fea(rg_dim, rg_hid*2)
+        self.clip_net = self.get_rnn_fea(clip_dim, clip_hid*3)
+        self.rna_net = self.get_rnn_fea(rna_dim, rna_hid*2)
+        self.motif_net = self.get_rnn_fea(motif_dim, motif_hid*2)
+        self.seq_net = self.get_cnn_network()
+                
+        self.total_hid=rg_hid*2 + clip_hid*3 + rna_hid*2 + motif_hid*2 + seq_hid # total hid is length of shared representation as mentioned in picturial summary of iDeep
         # not the same as original code, original code doesn't have "*2"s
-
-        self.lstm_net = nn.Sequential(nn.Dropout(0.5), nn.LSTM(input_size=1, hidden_size=1, num_layers=2, bidirectional=True, batch_first=True))
-
-        self.dense_net=nn.Sequential(nn.Linear(total_hid, 2), nn.Softmax(dim = 0))
         
+        self.dropout = nn.Dropout(0.2)
+        self.encoderlstm = nn.LSTM(1,2,2,batch_first=True)
+        #self.softmax = nn.Sequential(nn.Linear(self.total_hid * 2,1), nn.Softmax(dim = 0))
+        self.softmax = nn.Sequential(nn.Linear(self.total_hid * 2, 1), nn.Sigmoid())
+
     def forward(self, training_data):
+    # this method defines the forward function used in training and testing
         #   -training_data: a dictionary containing 5 files: "X_RG" for region type, "X_CLIP" for clip cobinding data, "X_RNA" for RNA structure data, "motif" for motif data, and "seq" for sequence data
         #                   this model assumes that training_data is preprocessed and split between training and testing
         rg_net = self.rg_net(training_data["X_RG"])
@@ -71,10 +78,10 @@ class CNN_LSTM(nn.Module):
         rna_net = self.rna_net(training_data["X_RNA"])
         motif_net = self.motif_net(training_data["motif"])
         seq_net = self.seq_net(training_data["seq"])
-        
         net = torch.cat((rg_net, clip_net, rna_net, motif_net, seq_net),1) # tensors of a batch are concatenated along axis 1 (the only non batch sequence dimension)
-        
-        net = self.lstm_net(net)
-        net = self.dense_net(net)
-        
+        net = self.dropout(net)
+        net = torch.unsqueeze(net, 2)
+        net, _ = self.encoderlstm(net)
+        net = net.reshape(100, self.total_hid*2)
+        net = self.softmax(net)
         return(net)
